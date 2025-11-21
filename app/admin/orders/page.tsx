@@ -1,77 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter, Download } from "lucide-react"
-import Link from "next/link"
-
-const orders = [
-  {
-    id: "#3210",
-    customer: "John Smith",
-    email: "john@example.com",
-    date: "2024-01-15",
-    total: 234.0,
-    status: "processing",
-    items: 2,
-    payment: "paid",
-  },
-  {
-    id: "#3209",
-    customer: "Sarah Johnson",
-    email: "sarah@example.com",
-    date: "2024-01-15",
-    total: 189.5,
-    status: "shipped",
-    items: 1,
-    payment: "paid",
-  },
-  {
-    id: "#3208",
-    customer: "Mike Davis",
-    email: "mike@example.com",
-    date: "2024-01-14",
-    total: 456.0,
-    status: "delivered",
-    items: 3,
-    payment: "paid",
-  },
-  {
-    id: "#3207",
-    customer: "Emily Brown",
-    email: "emily@example.com",
-    date: "2024-01-14",
-    total: 123.0,
-    status: "pending",
-    items: 1,
-    payment: "pending",
-  },
-  {
-    id: "#3206",
-    customer: "Chris Wilson",
-    email: "chris@example.com",
-    date: "2024-01-13",
-    total: 789.0,
-    status: "processing",
-    items: 4,
-    payment: "paid",
-  },
-  {
-    id: "#3205",
-    customer: "Lisa Anderson",
-    email: "lisa@example.com",
-    date: "2024-01-13",
-    total: 345.0,
-    status: "cancelled",
-    items: 2,
-    payment: "refunded",
-  },
-]
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Filter, Download } from "lucide-react";
+import Link from "next/link";
+import { ordersApi } from "@/lib/api/orders";
 
 const statusColors = {
   pending: "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20",
@@ -79,20 +30,64 @@ const statusColors = {
   shipped: "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20",
   delivered: "bg-green-500/10 text-green-500 hover:bg-green-500/20",
   cancelled: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
-}
+};
 
 export default function OrdersPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [orders, setOrders] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await ordersApi.getAll();
+      setOrders(response.data);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatOrderId = (id: string) => `#${id.slice(-4).toUpperCase()}`;
+
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
+      order.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.user?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      formatOrderId(order._id)
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || order.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading orders...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-foreground">Orders</h1>
-          <p className="text-muted-foreground">Manage and track customer orders</p>
+          <p className="text-muted-foreground">
+            Manage and track customer orders
+          </p>
         </div>
-        <Button variant="outline" className="border-border text-foreground hover:bg-secondary bg-transparent">
+        <Button
+          variant="outline"
+          className="border-border text-foreground hover:bg-secondary bg-transparent"
+        >
           <Download className="mr-2 h-4 w-4" />
           Export
         </Button>
@@ -166,8 +161,12 @@ export default function OrdersPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-muted-foreground">Order ID</TableHead>
-                <TableHead className="text-muted-foreground">Customer</TableHead>
+                <TableHead className="text-muted-foreground">
+                  Order ID
+                </TableHead>
+                <TableHead className="text-muted-foreground">
+                  Customer
+                </TableHead>
                 <TableHead className="text-muted-foreground">Date</TableHead>
                 <TableHead className="text-muted-foreground">Items</TableHead>
                 <TableHead className="text-muted-foreground">Total</TableHead>
@@ -177,48 +176,70 @@ export default function OrdersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id} className="border-border hover:bg-secondary/50">
+              {filteredOrders.map((order) => (
+                <TableRow
+                  key={order._id}
+                  className="border-border hover:bg-secondary/50"
+                >
                   <TableCell>
                     <Link
-                      href={`/admin/orders/${order.id.slice(1)}`}
+                      href={`/admin/orders/${order._id}`}
                       className="font-medium text-foreground hover:text-accent"
                     >
-                      {order.id}
+                      {formatOrderId(order._id)}
                     </Link>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium text-foreground">{order.customer}</p>
-                      <p className="text-xs text-muted-foreground">{order.email}</p>
+                      <p className="font-medium text-foreground">
+                        {order.user?.name || "N/A"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {order.user?.email || "N/A"}
+                      </p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{order.date}</TableCell>
-                  <TableCell className="text-muted-foreground">{order.items}</TableCell>
-                  <TableCell className="text-foreground">${order.total.toFixed(2)}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {order.products?.length || 0}
+                  </TableCell>
+                  <TableCell className="font-medium text-foreground">
+                    ${order.totalPrice.toFixed(2)}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant="secondary"
                       className={
                         order.payment === "paid"
                           ? "bg-green-500/10 text-green-500"
-                          : order.payment === "refunded"
-                            ? "bg-red-500/10 text-red-500"
-                            : "bg-yellow-500/10 text-yellow-500"
+                          : order.payment === "pending"
+                          ? "bg-yellow-500/10 text-yellow-500"
+                          : "bg-destructive/10 text-destructive"
                       }
                     >
                       {order.payment}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={statusColors[order.status as keyof typeof statusColors]}>
+                    <Badge
+                      variant="secondary"
+                      className={
+                        statusColors[order.status as keyof typeof statusColors]
+                      }
+                    >
                       {order.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Link href={`/admin/orders/${order.id.slice(1)}`}>
-                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                        View
+                    <Link href={`/admin/orders/${order._id}`}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        View Details
                       </Button>
                     </Link>
                   </TableCell>
@@ -229,5 +250,5 @@ export default function OrdersPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

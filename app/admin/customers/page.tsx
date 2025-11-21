@@ -1,70 +1,55 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Filter, UserPlus } from "lucide-react"
-import Link from "next/link"
-
-const customers = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john@example.com",
-    phone: "+1 (555) 123-4567",
-    orders: 12,
-    totalSpent: 2456.89,
-    dateJoined: "2023-06-15",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Sarah Johnson",
-    email: "sarah@example.com",
-    phone: "+1 (555) 234-5678",
-    orders: 8,
-    totalSpent: 1823.45,
-    dateJoined: "2023-08-22",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Mike Davis",
-    email: "mike@example.com",
-    phone: "+1 (555) 345-6789",
-    orders: 15,
-    totalSpent: 3567.23,
-    dateJoined: "2023-03-10",
-    status: "active",
-  },
-  {
-    id: "4",
-    name: "Emily Brown",
-    email: "emily@example.com",
-    phone: "+1 (555) 456-7890",
-    orders: 3,
-    totalSpent: 567.9,
-    dateJoined: "2023-11-05",
-    status: "active",
-  },
-  {
-    id: "5",
-    name: "Chris Wilson",
-    email: "chris@example.com",
-    phone: "+1 (555) 567-8901",
-    orders: 0,
-    totalSpent: 0,
-    dateJoined: "2024-01-12",
-    status: "blocked",
-  },
-]
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Search, Filter, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { customersApi } from "@/lib/api/customers";
 
 export default function CustomersPage() {
-  const [searchQuery, setSearchQuery] = useState("")
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await customersApi.getAll();
+      setCustomers(response.data);
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredCustomers = customers.filter(
+    (customer) =>
+      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading customers...</p>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -93,7 +78,9 @@ export default function CustomersPage() {
         </Card>
         <Card className="border-border bg-card">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-card-foreground">$1,234</div>
+            <div className="text-2xl font-bold text-card-foreground">
+              $1,234
+            </div>
             <p className="text-sm text-muted-foreground">Avg. Lifetime Value</p>
           </CardContent>
         </Card>
@@ -108,7 +95,9 @@ export default function CustomersPage() {
       <Card className="border-border bg-card">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-card-foreground">All Customers</CardTitle>
+            <CardTitle className="text-card-foreground">
+              All Customers
+            </CardTitle>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -133,18 +122,27 @@ export default function CustomersPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-muted-foreground">Customer</TableHead>
+                <TableHead className="text-muted-foreground">
+                  Customer
+                </TableHead>
                 <TableHead className="text-muted-foreground">Contact</TableHead>
                 <TableHead className="text-muted-foreground">Orders</TableHead>
-                <TableHead className="text-muted-foreground">Total Spent</TableHead>
-                <TableHead className="text-muted-foreground">Date Joined</TableHead>
+                <TableHead className="text-muted-foreground">
+                  Total Spent
+                </TableHead>
+                <TableHead className="text-muted-foreground">
+                  Date Joined
+                </TableHead>
                 <TableHead className="text-muted-foreground">Status</TableHead>
                 <TableHead className="text-muted-foreground"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {customers.map((customer) => (
-                <TableRow key={customer.id} className="border-border hover:bg-secondary/50">
+                <TableRow
+                  key={customer.id}
+                  className="border-border hover:bg-secondary/50"
+                >
                   <TableCell>
                     <Link
                       href={`/admin/customers/${customer.id}`}
@@ -155,18 +153,30 @@ export default function CustomersPage() {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="text-sm text-foreground">{customer.email}</p>
-                      <p className="text-xs text-muted-foreground">{customer.phone}</p>
+                      <p className="text-sm text-foreground">
+                        {customer.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {customer.phone}
+                      </p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-foreground">{customer.orders}</TableCell>
-                  <TableCell className="text-foreground">${customer.totalSpent.toFixed(2)}</TableCell>
-                  <TableCell className="text-muted-foreground">{customer.dateJoined}</TableCell>
+                  <TableCell className="text-foreground">
+                    {customer.orders}
+                  </TableCell>
+                  <TableCell className="text-foreground">
+                    ${customer.totalSpent.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {customer.dateJoined}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant="secondary"
                       className={
-                        customer.status === "active" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+                        customer.status === "active"
+                          ? "bg-green-500/10 text-green-500"
+                          : "bg-red-500/10 text-red-500"
                       }
                     >
                       {customer.status}
@@ -174,7 +184,11 @@ export default function CustomersPage() {
                   </TableCell>
                   <TableCell>
                     <Link href={`/admin/customers/${customer.id}`}>
-                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-foreground"
+                      >
                         View
                       </Button>
                     </Link>
@@ -186,5 +200,5 @@ export default function CustomersPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,77 +1,82 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye } from "lucide-react"
-import Link from "next/link"
-
-const products = [
-  {
-    id: "1",
-    name: "Classic Selvedge Denim Jeans",
-    sku: "SDJ-001",
-    category: "Jeans",
-    stock: 45,
-    price: 189.99,
-    status: "active",
-    image: "/denim-jeans.png",
-  },
-  {
-    id: "2",
-    name: "Raw Denim Jacket",
-    sku: "RDJ-002",
-    category: "Jackets",
-    stock: 23,
-    price: 249.99,
-    status: "active",
-    image: "/classic-denim-jacket.png",
-  },
-  {
-    id: "3",
-    name: "Vintage Wash Jeans",
-    sku: "VWJ-003",
-    category: "Jeans",
-    stock: 8,
-    price: 169.99,
-    status: "active",
-    image: "/vintage-jeans.png",
-  },
-  {
-    id: "4",
-    name: "Slim Fit Selvedge",
-    sku: "SFS-004",
-    category: "Jeans",
-    stock: 0,
-    price: 199.99,
-    status: "inactive",
-    image: "/slim-jeans.png",
-  },
-  {
-    id: "5",
-    name: "Denim Shirt",
-    sku: "DS-005",
-    category: "Shirts",
-    stock: 34,
-    price: 129.99,
-    status: "active",
-    image: "/denim-shirt.png",
-  },
-]
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Plus,
+  Search,
+  Filter,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Eye,
+} from "lucide-react";
+import Link from "next/link";
+import { productsApi } from "@/lib/api/products";
 
 export default function ProductsPage() {
-  const [searchQuery, setSearchQuery] = useState("")
+  const [products, setProducts] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await productsApi.getAll();
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this product?")) {
+      try {
+        await productsApi.delete(id);
+        setProducts(products.filter((p) => p._id !== id));
+      } catch (error) {
+        console.error("Failed to delete product:", error);
+        alert("Failed to delete product");
+      }
+    }
+  };
 
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      product.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading products...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -118,7 +123,9 @@ export default function ProductsPage() {
               <TableRow className="border-border hover:bg-transparent">
                 <TableHead className="text-muted-foreground">Product</TableHead>
                 <TableHead className="text-muted-foreground">SKU</TableHead>
-                <TableHead className="text-muted-foreground">Category</TableHead>
+                <TableHead className="text-muted-foreground">
+                  Category
+                </TableHead>
                 <TableHead className="text-muted-foreground">Stock</TableHead>
                 <TableHead className="text-muted-foreground">Price</TableHead>
                 <TableHead className="text-muted-foreground">Status</TableHead>
@@ -127,36 +134,49 @@ export default function ProductsPage() {
             </TableHeader>
             <TableBody>
               {filteredProducts.map((product) => (
-                <TableRow key={product.id} className="border-border hover:bg-secondary/50">
+                <TableRow
+                  key={product._id}
+                  className="border-border hover:bg-secondary/50"
+                >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <img
-                        src={product.image || "/placeholder.svg"}
+                        src={product.images?.[0] || "/placeholder.svg"}
                         alt={product.name}
                         className="h-10 w-10 rounded border border-border object-cover"
                       />
-                      <span className="font-medium text-foreground">{product.name}</span>
+                      <span className="font-medium text-foreground">
+                        {product.name}
+                      </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{product.sku}</TableCell>
-                  <TableCell className="text-muted-foreground">{product.category}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {product.sku}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {product.category}
+                  </TableCell>
                   <TableCell>
                     <span
                       className={
                         product.stock === 0
                           ? "text-destructive"
                           : product.stock < 10
-                            ? "text-yellow-500"
-                            : "text-foreground"
+                          ? "text-yellow-500"
+                          : "text-foreground"
                       }
                     >
                       {product.stock}
                     </span>
                   </TableCell>
-                  <TableCell className="text-foreground">${product.price}</TableCell>
+                  <TableCell className="text-foreground">
+                    ${product.price}
+                  </TableCell>
                   <TableCell>
                     <Badge
-                      variant={product.status === "active" ? "default" : "secondary"}
+                      variant={
+                        product.status === "active" ? "default" : "secondary"
+                      }
                       className={
                         product.status === "active"
                           ? "bg-green-500/10 text-green-500 hover:bg-green-500/20"
@@ -169,18 +189,25 @@ export default function ProductsPage() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-foreground"
+                        >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-popover text-popover-foreground">
-                        <Link href={`/admin/products/${product.id}`}>
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-popover text-popover-foreground"
+                      >
+                        <Link href={`/admin/products/${product._id}`}>
                           <DropdownMenuItem>
                             <Eye className="mr-2 h-4 w-4" />
                             View
                           </DropdownMenuItem>
                         </Link>
-                        <Link href={`/admin/products/${product.id}/edit`}>
+                        <Link href={`/admin/products/${product._id}/edit`}>
                           <DropdownMenuItem>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
@@ -188,11 +215,7 @@ export default function ProductsPage() {
                         </Link>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => {
-                            if (confirm("Are you sure you want to delete this product?")) {
-                              console.log("[v0] Delete product:", product.id)
-                            }
-                          }}
+                          onClick={() => handleDelete(product._id)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
@@ -207,5 +230,5 @@ export default function ProductsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
