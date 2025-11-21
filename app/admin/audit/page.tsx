@@ -1,109 +1,68 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter } from "lucide-react"
-
-const auditLogs = [
-  {
-    id: "1",
-    action: "Product Updated",
-    user: "admin@selvedgemark.com",
-    resource: "Classic Selvedge Denim Jeans",
-    details: "Updated price from $179.99 to $189.99",
-    timestamp: "2024-01-16 14:32:15",
-    type: "update",
-  },
-  {
-    id: "2",
-    action: "Order Created",
-    user: "system",
-    resource: "Order #1005",
-    details: "New order from David Wilson",
-    timestamp: "2024-01-16 14:15:42",
-    type: "create",
-  },
-  {
-    id: "3",
-    action: "Customer Deleted",
-    user: "admin@selvedgemark.com",
-    resource: "Customer #234",
-    details: "Deleted customer account at user request",
-    timestamp: "2024-01-16 13:45:22",
-    type: "delete",
-  },
-  {
-    id: "4",
-    action: "Settings Changed",
-    user: "admin@selvedgemark.com",
-    resource: "Store Settings",
-    details: "Updated tax rate from 8.0% to 8.5%",
-    timestamp: "2024-01-16 12:20:10",
-    type: "update",
-  },
-  {
-    id: "5",
-    action: "User Login",
-    user: "admin@selvedgemark.com",
-    resource: "Admin Panel",
-    details: "Successful login from IP 192.168.1.1",
-    timestamp: "2024-01-16 09:00:05",
-    type: "auth",
-  },
-  {
-    id: "6",
-    action: "Product Created",
-    user: "admin@selvedgemark.com",
-    resource: "Denim Shirt",
-    details: "Added new product to catalog",
-    timestamp: "2024-01-15 16:45:30",
-    type: "create",
-  },
-  {
-    id: "7",
-    action: "Order Status Changed",
-    user: "admin@selvedgemark.com",
-    resource: "Order #1003",
-    details: "Changed status from processing to shipped",
-    timestamp: "2024-01-15 15:20:18",
-    type: "update",
-  },
-  {
-    id: "8",
-    action: "Promotion Created",
-    user: "admin@selvedgemark.com",
-    resource: "SUMMER25",
-    details: "Created 25% off promotion code",
-    timestamp: "2024-01-15 11:10:45",
-    type: "create",
-  },
-]
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Filter } from "lucide-react";
+import { auditApi } from "@/lib/api/audit";
 
 export default function AuditLogsPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterType, setFilterType] = useState("all")
+  const [logs, setLogs] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [loading, setLoading] = useState(true);
 
-  const filteredLogs = auditLogs.filter((log) => {
-    const matchesSearch =
-      log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.resource.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    fetchLogs();
+  }, [filterType, searchQuery]);
 
-    const matchesType = filterType === "all" || log.type === filterType
+  const fetchLogs = async () => {
+    try {
+      const params: any = {};
+      if (filterType !== "all") params.type = filterType;
+      if (searchQuery) params.search = searchQuery;
 
-    return matchesSearch && matchesType
-  })
+      const response = await auditApi.getLogs(params);
+      setLogs(response.data);
+    } catch (error) {
+      console.error("Failed to fetch audit logs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading audit logs...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-foreground">Audit Logs</h1>
-          <p className="text-muted-foreground">Track all system activities and changes</p>
+          <p className="text-muted-foreground">
+            Track all system activities and changes
+          </p>
         </div>
       </div>
 
@@ -143,20 +102,37 @@ export default function AuditLogsPage() {
               <TableRow className="border-border hover:bg-transparent">
                 <TableHead className="text-muted-foreground">Action</TableHead>
                 <TableHead className="text-muted-foreground">User</TableHead>
-                <TableHead className="text-muted-foreground">Resource</TableHead>
+                <TableHead className="text-muted-foreground">
+                  Resource
+                </TableHead>
                 <TableHead className="text-muted-foreground">Details</TableHead>
-                <TableHead className="text-muted-foreground">Timestamp</TableHead>
+                <TableHead className="text-muted-foreground">
+                  Timestamp
+                </TableHead>
                 <TableHead className="text-muted-foreground">Type</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredLogs.map((log) => (
-                <TableRow key={log.id} className="border-border hover:bg-secondary/50">
-                  <TableCell className="font-medium text-foreground">{log.action}</TableCell>
-                  <TableCell className="text-muted-foreground">{log.user}</TableCell>
-                  <TableCell className="text-foreground">{log.resource}</TableCell>
-                  <TableCell className="text-muted-foreground">{log.details}</TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{log.timestamp}</TableCell>
+              {logs.map((log) => (
+                <TableRow
+                  key={log._id}
+                  className="border-border hover:bg-secondary/50"
+                >
+                  <TableCell className="font-medium text-foreground">
+                    {log.action}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {log.user?.email || log.user}
+                  </TableCell>
+                  <TableCell className="text-foreground">
+                    {log.resource}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {log.details}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {new Date(log.createdAt).toLocaleString()}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant="secondary"
@@ -164,10 +140,10 @@ export default function AuditLogsPage() {
                         log.type === "create"
                           ? "bg-green-500/10 text-green-500"
                           : log.type === "update"
-                            ? "bg-blue-500/10 text-blue-500"
-                            : log.type === "delete"
-                              ? "bg-destructive/10 text-destructive"
-                              : "bg-secondary text-muted-foreground"
+                          ? "bg-blue-500/10 text-blue-500"
+                          : log.type === "delete"
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-secondary text-muted-foreground"
                       }
                     >
                       {log.type}
@@ -180,5 +156,5 @@ export default function AuditLogsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
