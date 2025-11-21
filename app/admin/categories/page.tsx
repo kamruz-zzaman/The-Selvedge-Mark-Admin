@@ -27,8 +27,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
+import {
+  Plus,
+  Search,
+  MoreVertical,
+  Edit,
+  Trash2,
+  FolderTree,
+} from "lucide-react";
 import { categoriesApi } from "@/lib/api/categories";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -40,6 +56,7 @@ export default function CategoriesPage() {
     name: "",
     description: "",
   });
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchCategories();
@@ -50,7 +67,11 @@ export default function CategoriesPage() {
       const response = await categoriesApi.getAll();
       setCategories(response.data);
     } catch (error) {
-      console.error("Failed to fetch categories:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch categories. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -62,8 +83,16 @@ export default function CategoriesPage() {
     try {
       if (editingCategory) {
         await categoriesApi.update(editingCategory._id, formData);
+        toast({
+          title: "Success",
+          description: "Category updated successfully",
+        });
       } else {
         await categoriesApi.create(formData);
+        toast({
+          title: "Success",
+          description: "Category created successfully",
+        });
       }
 
       setIsDialogOpen(false);
@@ -71,7 +100,11 @@ export default function CategoriesPage() {
       setEditingCategory(null);
       fetchCategories();
     } catch (error: any) {
-      alert(error.response?.data?.error || "Failed to save category");
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to save category",
+        variant: "destructive",
+      });
     }
   };
 
@@ -89,23 +122,23 @@ export default function CategoriesPage() {
 
     try {
       await categoriesApi.delete(id);
+      toast({
+        title: "Success",
+        description: "Category deleted successfully",
+      });
       fetchCategories();
     } catch (error: any) {
-      alert(error.response?.data?.error || "Failed to delete category");
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to delete category",
+        variant: "destructive",
+      });
     }
   };
 
   const filteredCategories = categories.filter((cat) =>
     cat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading categories...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -199,79 +232,115 @@ export default function CategoriesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-muted-foreground">Name</TableHead>
-                <TableHead className="text-muted-foreground">Slug</TableHead>
-                <TableHead className="text-muted-foreground">
-                  Description
-                </TableHead>
-                <TableHead className="text-muted-foreground">
-                  Products
-                </TableHead>
-                <TableHead className="text-muted-foreground">Created</TableHead>
-                <TableHead className="text-muted-foreground"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCategories.map((category) => (
-                <TableRow
-                  key={category._id}
-                  className="border-border hover:bg-secondary/50"
-                >
-                  <TableCell className="font-medium text-foreground">
-                    {category.name}
-                  </TableCell>
-                  <TableCell className="font-mono text-sm text-muted-foreground">
-                    {category.slug}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground max-w-xs truncate">
-                    {category.description || "-"}
-                  </TableCell>
-                  <TableCell className="text-foreground">
-                    {category.productCount || 0}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(category.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="bg-popover text-popover-foreground"
-                      >
-                        <DropdownMenuItem onClick={() => handleEdit(category)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => handleDelete(category._id)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-12 w-full" />
+                </div>
               ))}
-            </TableBody>
-          </Table>
-          {filteredCategories.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No categories found
             </div>
+          ) : filteredCategories.length === 0 ? (
+            <Empty className="border-0">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <FolderTree className="h-6 w-6" />
+                </EmptyMedia>
+                <EmptyTitle>No categories found</EmptyTitle>
+                <EmptyDescription>
+                  {searchQuery
+                    ? "No categories match your search. Try a different search term."
+                    : "Get started by creating your first category."}
+                </EmptyDescription>
+              </EmptyHeader>
+              {!searchQuery && (
+                <Button
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setFormData({ name: "", description: "" });
+                    setIsDialogOpen(true);
+                  }}
+                  className="bg-primary text-primary-foreground"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Category
+                </Button>
+              )}
+            </Empty>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">Name</TableHead>
+                  <TableHead className="text-muted-foreground">Slug</TableHead>
+                  <TableHead className="text-muted-foreground">
+                    Description
+                  </TableHead>
+                  <TableHead className="text-muted-foreground">
+                    Products
+                  </TableHead>
+                  <TableHead className="text-muted-foreground">
+                    Created
+                  </TableHead>
+                  <TableHead className="text-muted-foreground"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCategories.map((category) => (
+                  <TableRow
+                    key={category._id}
+                    className="border-border hover:bg-secondary/50"
+                  >
+                    <TableCell className="font-medium text-foreground">
+                      {category.name}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm text-muted-foreground">
+                      {category.slug}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground max-w-xs truncate">
+                      {category.description || "-"}
+                    </TableCell>
+                    <TableCell className="text-foreground">
+                      {category.productCount || 0}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(category.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-popover text-popover-foreground"
+                        >
+                          <DropdownMenuItem
+                            onClick={() => handleEdit(category)}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => handleDelete(category._id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

@@ -27,14 +27,25 @@ import {
   Edit,
   Trash2,
   Eye,
+  Package,
 } from "lucide-react";
 import Link from "next/link";
 import { productsApi } from "@/lib/api/products";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchProducts();
@@ -45,7 +56,11 @@ export default function ProductsPage() {
       const response = await productsApi.getAll();
       setProducts(response.data);
     } catch (error) {
-      console.error("Failed to fetch products:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch products. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -56,9 +71,16 @@ export default function ProductsPage() {
       try {
         await productsApi.delete(id);
         setProducts(products.filter((p) => p._id !== id));
+        toast({
+          title: "Success",
+          description: "Product deleted successfully",
+        });
       } catch (error) {
-        console.error("Failed to delete product:", error);
-        alert("Failed to delete product");
+        toast({
+          title: "Error",
+          description: "Failed to delete product. Please try again.",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -72,8 +94,26 @@ export default function ProductsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading products...</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-9 w-48" />
+            <Skeleton className="h-5 w-64 mt-2" />
+          </div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <Card className="border-border bg-card">
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -82,8 +122,8 @@ export default function ProductsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground">Products</h1>
-          <p className="text-muted-foreground">Manage your product catalog</p>
+          <h1 className="text-3xl font-bold text-foreground">Products</h1>
+          <p className="text-muted-foreground">Manage your product inventory</p>
         </div>
         <Link href="/admin/products/new">
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -118,115 +158,143 @@ export default function ProductsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-muted-foreground">Product</TableHead>
-                <TableHead className="text-muted-foreground">SKU</TableHead>
-                <TableHead className="text-muted-foreground">
-                  Category
-                </TableHead>
-                <TableHead className="text-muted-foreground">Stock</TableHead>
-                <TableHead className="text-muted-foreground">Price</TableHead>
-                <TableHead className="text-muted-foreground">Status</TableHead>
-                <TableHead className="text-muted-foreground"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProducts.map((product) => (
-                <TableRow
-                  key={product._id}
-                  className="border-border hover:bg-secondary/50"
-                >
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={product.images?.[0] || "/placeholder.svg"}
-                        alt={product.name}
-                        className="h-10 w-10 rounded border border-border object-cover"
-                      />
-                      <span className="font-medium text-foreground">
-                        {product.name}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {product.sku}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground capitalize">
-                    {product.category?.name || "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={
-                        product.stock === 0
-                          ? "text-destructive"
-                          : product.stock < 10
-                          ? "text-yellow-500"
-                          : "text-foreground"
-                      }
-                    >
-                      {product.stock}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-foreground">
-                    ${product.price}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        product.status === "active" ? "default" : "secondary"
-                      }
-                      className={
-                        product.status === "active"
-                          ? "bg-green-500/10 text-green-500 hover:bg-green-500/20"
-                          : "bg-secondary text-muted-foreground"
-                      }
-                    >
-                      {product.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="bg-popover text-popover-foreground"
-                      >
-                        <Link href={`/admin/products/${product._id}`}>
-                          <DropdownMenuItem>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </DropdownMenuItem>
-                        </Link>
-                        <Link href={`/admin/products/${product._id}/edit`}>
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                        </Link>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => handleDelete(product._id)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {filteredProducts.length === 0 ? (
+            <Empty className="border-0">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Package className="h-6 w-6" />
+                </EmptyMedia>
+                <EmptyTitle>No products found</EmptyTitle>
+                <EmptyDescription>
+                  {searchQuery
+                    ? "No products match your search. Try a different search term."
+                    : "Get started by adding your first product."}
+                </EmptyDescription>
+              </EmptyHeader>
+              {!searchQuery && (
+                <Link href="/admin/products/new">
+                  <Button className="bg-primary text-primary-foreground">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Product
+                  </Button>
+                </Link>
+              )}
+            </Empty>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">
+                    Product
+                  </TableHead>
+                  <TableHead className="text-muted-foreground">SKU</TableHead>
+                  <TableHead className="text-muted-foreground">
+                    Category
+                  </TableHead>
+                  <TableHead className="text-muted-foreground">Stock</TableHead>
+                  <TableHead className="text-muted-foreground">Price</TableHead>
+                  <TableHead className="text-muted-foreground">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-muted-foreground"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredProducts.map((product) => (
+                  <TableRow
+                    key={product._id}
+                    className="border-border hover:bg-secondary/50"
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={product.images?.[0] || "/placeholder.svg"}
+                          alt={product.name}
+                          className="h-10 w-10 rounded border border-border object-cover"
+                        />
+                        <span className="font-medium text-foreground">
+                          {product.name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {product.sku}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground capitalize">
+                      {product.category?.name || "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={
+                          product.stock === 0
+                            ? "text-destructive"
+                            : product.stock < 10
+                            ? "text-yellow-500"
+                            : "text-foreground"
+                        }
+                      >
+                        {product.stock}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-foreground">
+                      ${product.price}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          product.status === "active" ? "default" : "secondary"
+                        }
+                        className={
+                          product.status === "active"
+                            ? "bg-green-500/10 text-green-500 hover:bg-green-500/20"
+                            : "bg-secondary text-muted-foreground"
+                        }
+                      >
+                        {product.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-popover text-popover-foreground"
+                        >
+                          <Link href={`/admin/products/${product._id}`}>
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </DropdownMenuItem>
+                          </Link>
+                          <Link href={`/admin/products/${product._id}/edit`}>
+                            <DropdownMenuItem>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                          </Link>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => handleDelete(product._id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

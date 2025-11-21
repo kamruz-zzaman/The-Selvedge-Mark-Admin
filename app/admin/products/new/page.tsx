@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { categoriesApi } from "@/lib/api/categories";
 import { productsApi } from "@/lib/api/products";
 import apiClient from "@/lib/api/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -36,6 +37,7 @@ export default function NewProductPage() {
     category: "",
     status: "active",
   });
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchCategories();
@@ -62,9 +64,17 @@ export default function NewProductPage() {
       };
 
       await productsApi.create(productData);
+      toast({
+        title: "Success",
+        description: "Product created successfully",
+      });
       router.push("/admin/products");
     } catch (error: any) {
-      alert(error.response?.data?.error || "Failed to create product");
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to create product",
+        variant: "destructive",
+      });
     }
   };
 
@@ -86,9 +96,17 @@ export default function NewProductPage() {
       });
 
       setImages([...images, ...response.data.data]);
+      toast({
+        title: "Success",
+        description: `${response.data.data.length} image(s) uploaded successfully`,
+      });
     } catch (error) {
       console.error("Failed to upload images:", error);
-      alert("Failed to upload images");
+      toast({
+        title: "Error",
+        description: "Failed to upload images. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
     }
