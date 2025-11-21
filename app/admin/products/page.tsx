@@ -67,7 +67,7 @@ export default function ProductsPage() {
     (product) =>
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchQuery.toLowerCase())
+      product.category?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) {
@@ -153,8 +153,8 @@ export default function ProductsPage() {
                   <TableCell className="text-muted-foreground">
                     {product.sku}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {product.category}
+                  <TableCell className="text-muted-foreground capitalize">
+                    {product.category?.name || "N/A"}
                   </TableCell>
                   <TableCell>
                     <span

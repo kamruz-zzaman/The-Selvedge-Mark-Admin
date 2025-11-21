@@ -1,47 +1,119 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Upload, X } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, Upload, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { categoriesApi } from "@/lib/api/categories";
+import { productsApi } from "@/lib/api/products";
+import apiClient from "@/lib/api/client";
 
 export default function NewProductPage() {
-  const router = useRouter()
-  const [images, setImages] = useState<string[]>([])
+  const router = useRouter();
+  const [images, setImages] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    sku: "",
+    price: "",
+    stock: "",
+    category: "",
+    status: "active",
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle product creation
-    router.push("/admin/products")
-  }
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
-  const handleImageUpload = () => {
-    // Mock image upload
-    setImages([...images, `/placeholder.svg?height=200&width=200&query=product+${images.length + 1}`])
-  }
+  const fetchCategories = async () => {
+    try {
+      const response = await categoriesApi.getAll();
+      setCategories(response.data);
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const productData = {
+        ...formData,
+        price: parseFloat(formData.price),
+        stock: parseInt(formData.stock),
+        images,
+      };
+
+      await productsApi.create(productData);
+      router.push("/admin/products");
+    } catch (error: any) {
+      alert(error.response?.data?.error || "Failed to create product");
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append("images", file);
+      });
+
+      const response = await apiClient.post("/products/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setImages([...images, ...response.data.data]);
+    } catch (error) {
+      console.error("Failed to upload images:", error);
+      alert("Failed to upload images");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index))
-  }
+    setImages(images.filter((_, i) => i !== index));
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/admin/products">
-          <Button variant="ghost" size="icon" className="text-foreground hover:bg-secondary">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-foreground hover:bg-secondary"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-semibold text-foreground">Add New Product</h1>
+          <h1 className="text-3xl font-semibold text-foreground">
+            Add New Product
+          </h1>
           <p className="text-muted-foreground">Create a new product listing</p>
         </div>
       </div>
@@ -51,7 +123,9 @@ export default function NewProductPage() {
           <div className="lg:col-span-2 space-y-6">
             <Card className="border-border bg-card">
               <CardHeader>
-                <CardTitle className="text-card-foreground">Basic Information</CardTitle>
+                <CardTitle className="text-card-foreground">
+                  Basic Information
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -60,6 +134,10 @@ export default function NewProductPage() {
                   </Label>
                   <Input
                     id="name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     placeholder="Classic Selvedge Denim Jeans"
                     required
                     className="bg-secondary text-foreground placeholder:text-muted-foreground"
@@ -71,6 +149,10 @@ export default function NewProductPage() {
                   </Label>
                   <Textarea
                     id="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     placeholder="Detailed product description..."
                     rows={6}
                     className="bg-secondary text-foreground placeholder:text-muted-foreground"
@@ -83,6 +165,10 @@ export default function NewProductPage() {
                     </Label>
                     <Input
                       id="sku"
+                      value={formData.sku}
+                      onChange={(e) =>
+                        setFormData({ ...formData, sku: e.target.value })
+                      }
                       placeholder="SDJ-001"
                       required
                       className="bg-secondary text-foreground placeholder:text-muted-foreground"
@@ -104,7 +190,9 @@ export default function NewProductPage() {
 
             <Card className="border-border bg-card">
               <CardHeader>
-                <CardTitle className="text-card-foreground">Pricing & Inventory</CardTitle>
+                <CardTitle className="text-card-foreground">
+                  Pricing & Inventory
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -116,6 +204,10 @@ export default function NewProductPage() {
                       id="price"
                       type="number"
                       step="0.01"
+                      value={formData.price}
+                      onChange={(e) =>
+                        setFormData({ ...formData, price: e.target.value })
+                      }
                       placeholder="189.99"
                       required
                       className="bg-secondary text-foreground placeholder:text-muted-foreground"
@@ -142,6 +234,10 @@ export default function NewProductPage() {
                     <Input
                       id="stock"
                       type="number"
+                      value={formData.stock}
+                      onChange={(e) =>
+                        setFormData({ ...formData, stock: e.target.value })
+                      }
                       placeholder="45"
                       required
                       className="bg-secondary text-foreground placeholder:text-muted-foreground"
@@ -164,7 +260,9 @@ export default function NewProductPage() {
 
             <Card className="border-border bg-card">
               <CardHeader>
-                <CardTitle className="text-card-foreground">Product Images</CardTitle>
+                <CardTitle className="text-card-foreground">
+                  Product Images
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -185,16 +283,22 @@ export default function NewProductPage() {
                         </button>
                       </div>
                     ))}
-                    <button
-                      type="button"
-                      onClick={handleImageUpload}
-                      className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-border bg-secondary hover:bg-secondary/80"
-                    >
+                    <label className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-border bg-secondary hover:bg-secondary/80 cursor-pointer">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={uploading}
+                      />
                       <div className="text-center">
                         <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                        <p className="mt-2 text-xs text-muted-foreground">Upload</p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {uploading ? "Uploading..." : "Upload"}
+                        </p>
                       </div>
-                    </button>
+                    </label>
                   </div>
                 </div>
               </CardContent>
@@ -204,22 +308,30 @@ export default function NewProductPage() {
           <div className="space-y-6">
             <Card className="border-border bg-card">
               <CardHeader>
-                <CardTitle className="text-card-foreground">Organization</CardTitle>
+                <CardTitle className="text-card-foreground">
+                  Organization
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="category" className="text-foreground">
                     Category
                   </Label>
-                  <Select>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, category: value })
+                    }
+                  >
                     <SelectTrigger className="bg-secondary text-foreground">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover text-popover-foreground">
-                      <SelectItem value="jeans">Jeans</SelectItem>
-                      <SelectItem value="jackets">Jackets</SelectItem>
-                      <SelectItem value="shirts">Shirts</SelectItem>
-                      <SelectItem value="accessories">Accessories</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat._id} value={cat._id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -302,11 +414,14 @@ export default function NewProductPage() {
               Cancel
             </Button>
           </Link>
-          <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button
+            type="submit"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             Create Product
           </Button>
         </div>
       </form>
     </div>
-  )
+  );
 }
