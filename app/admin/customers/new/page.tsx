@@ -18,9 +18,13 @@ import {
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { customersApi } from "@/lib/api/customers";
+import { useToast } from "@/hooks/use-toast";
 
 export default function NewCustomerPage() {
   const router = useRouter();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -37,9 +41,40 @@ export default function NewCustomerPage() {
     tags: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/admin/customers");
+    setLoading(true);
+
+    try {
+      // Prepare customer data
+      const customerData = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        postalCode: formData.zip,
+        country: formData.country,
+      };
+
+      await customersApi.create(customerData);
+
+      toast({
+        title: "Success",
+        description: "Customer created successfully",
+      });
+
+      router.push("/admin/customers");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to create customer",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,10 +101,11 @@ export default function NewCustomerPage() {
         </div>
         <Button
           onClick={handleSubmit}
+          disabled={loading}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
         >
           <Save className="mr-2 h-4 w-4" />
-          Save Customer
+          {loading ? "Saving..." : "Save Customer"}
         </Button>
       </div>
 

@@ -13,14 +13,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Filter, UserPlus } from "lucide-react";
+import { Search, Filter, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
 import { customersApi } from "@/lib/api/customers";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchCustomers();
@@ -31,7 +41,11 @@ export default function CustomersPage() {
       const response = await customersApi.getAll();
       setCustomers(response.data);
     } catch (error) {
-      console.error("Failed to fetch customers:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch customers",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -45,8 +59,58 @@ export default function CustomersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading customers...</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-9 w-48" />
+            <Skeleton className="h-5 w-64 mt-2" />
+          </div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  if (!loading && filteredCustomers.length === 0 && searchQuery === "") {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-semibold text-foreground">
+              Customers
+            </h1>
+            <p className="text-muted-foreground">Manage your customer base</p>
+          </div>
+          <Link href="/admin/customers/new">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Customer
+            </Button>
+          </Link>
+        </div>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia>
+              <Users className="h-12 w-12" />
+            </EmptyMedia>
+            <EmptyTitle>No customers yet</EmptyTitle>
+            <EmptyDescription>
+              Get started by adding your first customer
+            </EmptyDescription>
+          </EmptyHeader>
+          <Link href="/admin/customers/new">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Customer
+            </Button>
+          </Link>
+        </Empty>
       </div>
     );
   }
@@ -57,10 +121,12 @@ export default function CustomersPage() {
           <h1 className="text-3xl font-semibold text-foreground">Customers</h1>
           <p className="text-muted-foreground">Manage your customer base</p>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Customer
-        </Button>
+        <Link href="/admin/customers/new">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Customer
+          </Button>
+        </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
