@@ -18,7 +18,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Selvedge Mark Admin",
   description: "Admin dashboard for Selvedge Mark ecommerce",
-  generator: "v0.app",
 };
 
 export default function RootLayout({

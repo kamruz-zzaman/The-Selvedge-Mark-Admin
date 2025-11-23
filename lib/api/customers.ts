@@ -16,6 +16,11 @@ export const customersApi = {
     return response.data;
   },
 
+  create: async (data: any) => {
+    const response = await apiClient.post('/customers', data);
+    return response.data;
+  },
+
   update: async (id: string, data: any) => {
     const response = await apiClient.put(`/customers/${id}`, data);
     return response.data;

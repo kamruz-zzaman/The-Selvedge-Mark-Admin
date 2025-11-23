@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, Download } from "lucide-react";
+import { Search, Filter, Download, Plus } from "lucide-react";
 import Link from "next/link";
 import { ordersApi } from "@/lib/api/orders";
 
@@ -80,17 +80,14 @@ export default function OrdersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-foreground">Orders</h1>
-          <p className="text-muted-foreground">
-            Manage and track customer orders
-          </p>
+          <p className="text-muted-foreground">Manage customer orders</p>
         </div>
-        <Button
-          variant="outline"
-          className="border-border text-foreground hover:bg-secondary bg-transparent"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Export
-        </Button>
+        <Link href="/admin/orders/new">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Order
+          </Button>
+        </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">

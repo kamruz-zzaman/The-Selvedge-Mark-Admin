@@ -11,6 +11,11 @@ export const ordersApi = {
     return response.data;
   },
 
+  create: async (data: any) => {
+    const response = await apiClient.post('/orders', data);
+    return response.data;
+  },
+
   updateToDelivered: async (id: string) => {
     const response = await apiClient.put(`/orders/${id}/deliver`);
     return response.data;

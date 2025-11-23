@@ -1,20 +1,30 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Save, Upload } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, Save, Upload } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-export default function ProductEditPage({ params }: { params: { id: string } }) {
-  const router = useRouter()
+export default function ProductEditPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const router = useRouter();
 
   const [formData, setFormData] = useState({
     name: "Classic Selvedge Denim Jeans",
@@ -29,30 +39,39 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
       "Premium selvedge denim jeans crafted from Japanese raw denim. Features authentic shuttle-loom construction with red selvedge line detail.",
     tags: "selvedge, raw denim, premium",
     seoTitle: "Classic Selvedge Denim Jeans | Selvedge Mark",
-    seoDescription: "Premium Japanese selvedge denim jeans with authentic construction",
-  })
+    seoDescription:
+      "Premium Japanese selvedge denim jeans with authentic construction",
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("[v0] Update product:", params.id, formData)
-    router.push(`/admin/products/${params.id}`)
-  }
+    e.preventDefault();
+    router.push(`/admin/products/${params.id}`);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href={`/admin/products/${params.id}`}>
-            <Button variant="ghost" size="icon" className="text-foreground hover:bg-secondary">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-foreground hover:bg-secondary"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-semibold text-foreground">Edit Product</h1>
+            <h1 className="text-3xl font-semibold text-foreground">
+              Edit Product
+            </h1>
             <p className="text-muted-foreground">Update product information</p>
           </div>
         </div>
-        <Button onClick={handleSubmit} className="bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button
+          onClick={handleSubmit}
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
+        >
           <Save className="mr-2 h-4 w-4" />
           Save Changes
         </Button>
@@ -62,7 +81,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
         <div className="lg:col-span-2 space-y-6">
           <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle className="text-card-foreground">Basic Information</CardTitle>
+              <CardTitle className="text-card-foreground">
+                Basic Information
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -72,7 +93,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="bg-secondary text-foreground"
                 />
               </div>
@@ -83,7 +106,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   rows={4}
                   className="bg-secondary text-foreground"
                 />
@@ -106,7 +131,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                     type="number"
                     step="0.01"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
                     className="bg-secondary text-foreground"
                   />
                 </div>
@@ -119,7 +146,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                     type="number"
                     step="0.01"
                     value={formData.comparePrice}
-                    onChange={(e) => setFormData({ ...formData, comparePrice: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, comparePrice: e.target.value })
+                    }
                     className="bg-secondary text-foreground"
                   />
                 </div>
@@ -132,7 +161,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                     type="number"
                     step="0.01"
                     value={formData.cost}
-                    onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, cost: e.target.value })
+                    }
                     className="bg-secondary text-foreground"
                   />
                 </div>
@@ -152,7 +183,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                 <Input
                   id="seoTitle"
                   value={formData.seoTitle}
-                  onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, seoTitle: e.target.value })
+                  }
                   className="bg-secondary text-foreground"
                 />
               </div>
@@ -163,7 +196,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                 <Textarea
                   id="seoDescription"
                   value={formData.seoDescription}
-                  onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, seoDescription: e.target.value })
+                  }
                   rows={3}
                   className="bg-secondary text-foreground"
                 />
@@ -178,7 +213,12 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
               <CardTitle className="text-card-foreground">Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, status: value })
+                }
+              >
                 <SelectTrigger className="bg-secondary text-foreground">
                   <SelectValue />
                 </SelectTrigger>
@@ -193,10 +233,16 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
 
           <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle className="text-card-foreground">Product Image</CardTitle>
+              <CardTitle className="text-card-foreground">
+                Product Image
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <img src="/denim-jeans.png" alt="Product" className="w-full rounded border border-border object-cover" />
+              <img
+                src="/denim-jeans.png"
+                alt="Product"
+                className="w-full rounded border border-border object-cover"
+              />
               <Button
                 variant="outline"
                 className="w-full border-border text-foreground hover:bg-secondary bg-transparent"
@@ -209,7 +255,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
 
           <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle className="text-card-foreground">Organization</CardTitle>
+              <CardTitle className="text-card-foreground">
+                Organization
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -218,7 +266,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                 </Label>
                 <Select
                   value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
+                  }
                 >
                   <SelectTrigger className="bg-secondary text-foreground">
                     <SelectValue />
@@ -238,7 +288,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                 <Input
                   id="sku"
                   value={formData.sku}
-                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, sku: e.target.value })
+                  }
                   className="bg-secondary text-foreground"
                 />
               </div>
@@ -249,7 +301,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                 <Input
                   id="tags"
                   value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tags: e.target.value })
+                  }
                   placeholder="Comma separated"
                   className="bg-secondary text-foreground"
                 />
@@ -270,7 +324,9 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
                   id="stock"
                   type="number"
                   value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stock: e.target.value })
+                  }
                   className="bg-secondary text-foreground"
                 />
               </div>
@@ -279,5 +335,5 @@ export default function ProductEditPage({ params }: { params: { id: string } }) 
         </div>
       </form>
     </div>
-  )
+  );
 }
